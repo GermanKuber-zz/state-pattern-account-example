@@ -2,31 +2,26 @@
 
 namespace AtmDemo
 {
-    public class AccountClosedException : Exception { }
-    public class AccountNotVerifiedException : Exception { }
-    public class AccountHasNotMoneyException : Exception { }
-    public class AccountHasMoneyException : Exception { }
     public class Account
     {
         private decimal _amount;
         private readonly string _holder;
         private readonly Action onUnFreeze;
 
-        private AccountState _state = AccountState.Open;
-        public Account(bool isVerified, bool isOpen, bool isFrozen, decimal initialAmount, string holder, Action onUnFreeze)
+        private AccountState _state = AccountState.Active;
+        public Account(bool isVerified, bool isActive, bool isFrozen, decimal initialAmount, string holder, Action onUnFreeze)
         {
-            if (isVerified)
-                _state |= AccountState.Verfied;
-            if (isOpen)
-                _state |= AccountState.Open;
+            if (!isVerified)
+                _state = AccountState.NotVerified;
             else
             {
-                _state |= AccountState.Close;
-                _state &= ~AccountState.Open;
+                if (isActive)
+                    _state = AccountState.Active;
+                else
+                    _state = AccountState.Close;
             }
-
             if (isFrozen)
-                _state |= AccountState.Frozen;
+                _state = AccountState.Frozen;
 
 
             _amount = initialAmount;
@@ -38,22 +33,22 @@ namespace AtmDemo
 
         public void Deposit(decimal amount)
         {
-            if (_state.HasFlag(AccountState.Close))
+            if (_state == AccountState.Close)
             {
                 Console.WriteLine("La cuenta se encuentra cerrada");
                 throw new AccountClosedException();
             }
 
-            if (_state.HasFlag(AccountState.Open) && !_state.HasFlag(AccountState.Verfied))
+            if (_state == AccountState.NotVerified)
             {
                 Console.WriteLine("La cuenta no se encuentra verificada");
                 throw new AccountNotVerifiedException();
             }
 
-            if (_state.HasFlag(AccountState.Open) && _state.HasFlag(AccountState.Verfied))
+            if (_state == AccountState.Active)
                 deposit(amount);
 
-            if (_state.HasFlag(AccountState.Frozen))
+            if (_state == AccountState.Frozen)
             {
                 //Se debe implementar el estado congelado
                 //Y en caso de ser descongelado se debe llamar a una función de callback
@@ -65,23 +60,22 @@ namespace AtmDemo
 
         public void WithDraw(decimal amount)
         {
-            if (_state.HasFlag(AccountState.Close))
-
+            if (_state == AccountState.Close)
             {
                 Console.WriteLine("La cuenta se encuentra cerrada");
                 throw new AccountClosedException();
             }
 
-            if (_state.HasFlag(AccountState.Open) && !_state.HasFlag(AccountState.Verfied))
+            if (_state == AccountState.NotVerified)
             {
                 Console.WriteLine("La cuenta no se encuentra verificada");
                 throw new AccountNotVerifiedException();
             }
 
-            if (_state.HasFlag(AccountState.Open) && _state.HasFlag(AccountState.Verfied))
+            if (_state == AccountState.Active)
                 withDraw(amount);
 
-            if (_state.HasFlag(AccountState.Frozen))
+            if (_state == AccountState.Frozen)
             {
                 //Se debe implementar el estado congelado
                 //Y en caso de ser descongelado se debe llamar a una función de callback
@@ -102,32 +96,20 @@ namespace AtmDemo
 
         public void HolderVirfied()
         {
-            if (_state.HasFlag(AccountState.Close))
+            if (_state == AccountState.Close)
                 throw new AccountClosedException();
 
-            _state |= AccountState.Verfied;
+            _state = AccountState.Active;
         }
-        public void Open()
-        {
-            _state |= AccountState.Open;
-            _state &= ~AccountState.Close;
 
-        }
         public void Close()
         {
             if (_amount > 0)
                 throw new AccountHasMoneyException();
 
-            _state |= AccountState.Close;
-            _state &= ~AccountState.Open;
+            _state = AccountState.Close;
         }
-        public AccountState State()
-        {
-            if (_state.HasFlag(AccountState.Open) && !_state.HasFlag(AccountState.Close))
-                return AccountState.Open;
-
-            return AccountState.Close;
-        }
+        public AccountState State() => _state;
 
     }
 }

@@ -17,18 +17,20 @@ namespace AtmDemo.Tests
         [Fact]
         public void Cant_Deposit_Money_Is_Not_Closed()
         {
+            _sut = new Account(true, false, false, 1000, "Germán Küber", () => { });
+
+            _atmMachine = new AtmMachine(_sut);
+
             Assert.Throws<AccountClosedException>(() => _atmMachine.Deposit(100));
         }
         [Fact]
         public void Cant_Deposit_Money_Is_Not_Verified()
         {
-            _atmMachine.OpenAccount();
             Assert.Throws<AccountNotVerifiedException>(() => _atmMachine.Deposit(100));
         }
         [Fact]
         public void Can_Deposit_Money()
         {
-            _atmMachine.OpenAccount();
             _atmMachine.HolderVirfied();
             _atmMachine.Deposit(100);
             Assert.Equal(1100, _atmMachine.Summary());
@@ -37,18 +39,19 @@ namespace AtmDemo.Tests
         [Fact]
         public void Cant_WithDraw_Money_Is_Not_Closed()
         {
+            _sut = new Account(true, false, false, 1000, "Germán Küber", () => { });
+
+            _atmMachine = new AtmMachine(_sut);
             Assert.Throws<AccountClosedException>(() => _atmMachine.WithDraw(100));
         }
         [Fact]
         public void Cant_WithDraw_Money_Is_Not_Verified()
         {
-            _atmMachine.OpenAccount();
             Assert.Throws<AccountNotVerifiedException>(() => _atmMachine.WithDraw(100));
         }
         [Fact]
         public void Can_WithDraw_Money()
         {
-            _atmMachine.OpenAccount();
             _atmMachine.HolderVirfied();
             _atmMachine.WithDraw(100);
             Assert.Equal(900, _atmMachine.Summary());
@@ -57,6 +60,9 @@ namespace AtmDemo.Tests
         [Fact]
         public void Cant_Verified_Account_Is_Not_Open()
         {
+            _sut = new Account(true, false, false, 1000, "Germán Küber", () => { });
+
+            _atmMachine = new AtmMachine(_sut);
             Assert.Throws<AccountClosedException>(() => _atmMachine.HolderVirfied());
         }
         [Fact]
@@ -79,17 +85,13 @@ namespace AtmDemo.Tests
         {
             var execute = false;
             var sut = new Account(true, true, true, 1000, "Germán Küber - Demo", () => { execute = true; });
-            var  atmMachine = new AtmMachine(sut);
-            
+            var atmMachine = new AtmMachine(sut);
+
             atmMachine.WithDraw(1000);
 
             Assert.True(execute);
         }
 
-        private void AccountAlreadyToOperate()
-        {
-            _atmMachine.OpenAccount();
-            _atmMachine.HolderVirfied();
-        }
+        private void AccountAlreadyToOperate() => _atmMachine.HolderVirfied();
     }
 }

@@ -13,7 +13,6 @@
         public void WithDraw(decimal amount) => _account.WithDraw(amount);
         public void HolderVirfied() => _account.HolderVirfied();
         public decimal Summary() => _account.Summary();
-        public void OpenAccount() => _account.Open();
         public void CloseAccount() => _account.Close();
         public AccountState StateAccount() => _account.State();
     }
